@@ -6,13 +6,26 @@ const { checkToken } = require('./../middleware/token-middleware');
 router.use(checkToken);
 
 router.get('/', async function(req, res) {
-  let locations = await Location.findAll({});
-    res.json({
-      status: true,
-      data: {
-        locations: locations
+  let locations = await Location.findAll({include: 'user'});
+  locations = locations.map(function(location){
+    let { id, latitude, longitude, updatedAt, user } = location;
+    return {
+      id: id,
+      latitude: latitude,
+      longitude: longitude,
+      updatedAt: updatedAt,
+      user: {
+        id: user ? user.id  : 0,
+        name: user ? user.name : null
       }
-    })
+    }
+  })
+  res.json({
+    status: true,
+    data: {
+      locations: locations
+    }
+  })
 });
 
 router.post('/', async function(req, res){

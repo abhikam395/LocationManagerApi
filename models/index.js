@@ -9,10 +9,20 @@ const config = require(__dirname + '/../config/config.json')[env];
 const db = {};
 
 let sequelize;
+let pool = {
+  max: 5,
+  min: 0,
+  acquire: 30000,
+  idle: 10000
+}
 if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
+  sequelize = new Sequelize(process.env[config.use_env_variable], config, {
+    pool: pool
+  });
 } else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
+  sequelize = new Sequelize(config.database, config.username, config.password, config, {
+    pool: pool
+  });
 }
 
 fs

@@ -4,9 +4,11 @@ const User = require('./../models').User;
 
 const { checkPassword, generateHash } = require('./../utils/hash-password');
 const { getToken } = require('./../utils/token');
+const { registerMiddleware, loginMiddleware } = require('./../middleware/auth-middleware');
 
 //user register api
-router.post('/register', async function(req, res){
+router.post('/register', registerMiddleware(), async function(req, res){
+
     let { name, email, password } = req.query;
     let hashPassword = await generateHash(password);
     let user = User.create({
@@ -41,7 +43,7 @@ router.post('/register', async function(req, res){
 
 
 //user login api
-router.post('/login', function(req, res, next) {
+router.post('/login', loginMiddleware(), function(req, res, next) {
     let { email, password } = req.query;
     let user = User.findOne({
         where:{
@@ -60,27 +62,20 @@ router.post('/login', function(req, res, next) {
                 let token = await getToken(userObj);
                 res.json({
                     status: true,
-                    data: {
-                        token: token,
-                        user: userObj
-                    }
+                    data: { token: token, user: userObj }
                 })
             }
             else{
                 res.json({
                     status: false,
-                    error:{
-                        message: 'Check your password'
-                    } 
+                    error:{ message: 'Check your password' } 
                 })
             }
         }
         else{
             res.json({
                 status: false,
-                error:{
-                    message: 'User not registered'
-                } 
+                error:{ message: 'User not registered' } 
             })
         }
     }).catch(err => {
