@@ -2,29 +2,55 @@ var express = require('express');
 var router = express.Router();
 const Location = require('./../models').Location;
 const { checkToken } = require('./../middleware/token-middleware');
+const { getUserFromToken } = require('./../utils/token');
+const {Op} = require('sequelize');
 
 router.use(checkToken);
 
 router.get('/', async function(req, res) {
-  let locations = await Location.findAll({include: 'user'});
-  locations = locations.map(function(location){
-    let { id, latitude, longitude, updatedAt, user } = location;
-    return {
-      id: id,
-      latitude: latitude,
-      longitude: longitude,
-      updatedAt: updatedAt,
-      user: {
-        id: user ? user.id  : 0,
-        name: user ? user.name : null
+  let { token } = req.headers;
+  getUserFromToken(token)
+  .then(user => {
+    Location.findAll({
+      attributes: {exclude: ['userId', 'createdAt']},
+        where: {
+          [Op.not]: {
+            userId: user.user.id
+          }
+        },
+        include: 'user'}).then(data => {
+          res.json({
+            data: data
+          })
+        });
+    // locations = locations.map(function(location){
+    //   let { id, latitude, longitude, updatedAt, user } = location;
+    //   return {
+    //     id: id,
+    //     latitude: latitude,
+    //     longitude: longitude,
+    //     updatedAt: updatedAt,
+    //     user: {
+    //       id: user ? user.id  : 0,
+    //       name: user ? user.name : null
+    //     }
+    //   }
+    // })
+    // res.json({
+    //   status: true,
+    //   data: {
+    //     locations: locations
+    //   }
+    // })
+    // })
+      })
+  .catch(err => {
+    res.json({
+      status: false,
+      error: {
+        message: err
       }
-    }
-  })
-  res.json({
-    status: true,
-    data: {
-      locations: locations
-    }
+    })
   })
 });
 
