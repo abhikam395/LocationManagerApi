@@ -18,32 +18,29 @@ router.get('/', async function(req, res) {
             userId: user.user.id
           }
         },
-        include: 'user'}).then(data => {
+        include: 'user'})
+        .then(data => {
+            let locations = data.map(function(location){
+              let { id, latitude, longitude, updatedAt, user } = location;
+              return {
+                id: id,
+                latitude: latitude,
+                longitude: longitude,
+                updatedAt: updatedAt,
+                user: {
+                  id: user ? user.id  : 0,
+                  name: user ? user.name : null
+                }
+              }
+            })
           res.json({
-            data: data
+            status: true,
+            data: {
+              locations: locations
+            }
           })
         });
-    // locations = locations.map(function(location){
-    //   let { id, latitude, longitude, updatedAt, user } = location;
-    //   return {
-    //     id: id,
-    //     latitude: latitude,
-    //     longitude: longitude,
-    //     updatedAt: updatedAt,
-    //     user: {
-    //       id: user ? user.id  : 0,
-    //       name: user ? user.name : null
-    //     }
-    //   }
-    // })
-    // res.json({
-    //   status: true,
-    //   data: {
-    //     locations: locations
-    //   }
-    // })
-    // })
-      })
+    })
   .catch(err => {
     res.json({
       status: false,
